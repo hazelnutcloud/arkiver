@@ -1,0 +1,8 @@
+{
+  "name": "arkiver",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "examples/*"
+  ]
+}
