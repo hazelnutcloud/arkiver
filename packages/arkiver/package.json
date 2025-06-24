@@ -3,9 +3,14 @@
   "module": "src/index.ts",
   "type": "module",
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "abitype": "^1.0.8"
   },
   "peerDependencies": {
-    "typescript": "^5"
+    "typescript": "^5",
+    "@mikro-orm/core": "^6.4.17-dev.32"
+  },
+  "dependencies": {
+    "viem": "^2.31.4"
   }
 }

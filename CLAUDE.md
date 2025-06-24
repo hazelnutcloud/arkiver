@@ -1,43 +1,148 @@
----
+# CLAUDE.md
 
-Default to using Bun instead of Node.js.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Project Overview
+
+Arkiver is a blockchain data indexing framework built with Bun and TypeScript. It provides a type-safe way to index and transform blockchain events, transactions, and blocks into structured data using MikroORM for database management.
+
+## Architecture
+
+This is a monorepo with the following structure:
+- `packages/arkiver/` - Core indexing framework
+- `examples/` - Example implementations (to be added)
+
+The core framework (`packages/arkiver/src/core/arkive.ts`) provides:
+- **Contract indexing**: Index events from smart contracts using ABIs
+- **Account tracking**: Track account transactions and transfers  
+- **Block indexing**: Index blocks at specified intervals
+- **Multi-chain support**: Configure multiple blockchain networks
+- **Transform functions**: Process indexed data with custom transformers
+- **Database integration**: Uses MikroORM for data persistence
+
+## Development Commands
+
+```bash
+# Install dependencies
+bun install
+
+# Run TypeScript files directly (from packages/arkiver)
+bun run src/index.ts
+
+# Run tests (when implemented)
+bun test
+
+# Type checking (TypeScript runs through Bun)
+bun run tsc --noEmit
+```
+
+## Bun-Specific Guidelines
+
+Default to using Bun instead of Node.js:
 
 - Use `bun <file>` instead of `node <file>` or `ts-node <file>`
 - Use `bun test` instead of `jest` or `vitest`
 - Use `bun build <file.html|file.ts|file.css>` instead of `webpack` or `esbuild`
 - Use `bun install` instead of `npm install` or `yarn install` or `pnpm install`
 - Use `bun run <script>` instead of `npm run <script>` or `yarn run <script>` or `pnpm run <script>`
-- Bun automatically loads .env, so don't use dotenv.
+- Bun automatically loads .env, so don't use dotenv
 
-## APIs
+### Bun APIs
 
-- `Bun.serve()` supports WebSockets, HTTPS, and routes. Don't use `express`.
-- `bun:sqlite` for SQLite. Don't use `better-sqlite3`.
-- `Bun.redis` for Redis. Don't use `ioredis`.
-- `Bun.sql` for Postgres. Don't use `pg` or `postgres.js`.
-- `WebSocket` is built-in. Don't use `ws`.
+- `Bun.serve()` supports WebSockets, HTTPS, and routes. Don't use `express`
+- `bun:sqlite` for SQLite. Don't use `better-sqlite3`
+- `Bun.redis` for Redis. Don't use `ioredis`
+- `Bun.sql` for Postgres. Don't use `pg` or `postgres.js`
+- `WebSocket` is built-in. Don't use `ws`
 - Prefer `Bun.file` over `node:fs`'s readFile/writeFile
-- Bun.$`ls` instead of execa.
+- Bun.$`ls` instead of execa
 
-## Testing
+### Testing
 
-Use `bun test` to run tests.
+Use `bun test` to run tests:
 
-```ts#index.test.ts
+```ts
 import { test, expect } from "bun:test";
 
-test("hello world", () => {
+test("example test", () => {
   expect(1).toBe(1);
 });
 ```
 
-## Frontend
+## Key Dependencies
 
-Use HTML imports with `Bun.serve()`. Don't use `vite`. HTML imports fully support React, CSS, Tailwind.
+- **viem**: Ethereum library for blockchain interactions
+- **abitype**: Type-safe ABI parsing and formatting
+- **@mikro-orm/core**: Database ORM (peer dependency)
+- **TypeScript 5+**: Required peer dependency
 
-Server:
+## Usage Pattern
 
-```ts#index.ts
+The framework follows this pattern:
+
+```typescript
+import { createArkive } from "arkiver";
+
+const arkive = createArkive({
+  entities: [/* MikroORM entities */],
+  sources: {
+    contracts: {
+      ContractName: {
+        abi: contractAbi,
+        chain: "chainName",
+        address: "0x...",
+        includeCallTraces: true, // Optional
+      }
+    },
+    accounts: {
+      AccountName: {
+        chain: "chainName",
+        address: "0x...",
+      }
+    },
+    blocks: {
+      BlockName: {
+        chain: "chainName",
+        interval: 100,
+      }
+    }
+  },
+  transformers: {
+    "ContractName:EventName": async (ctx) => {
+      // Handle contract events
+    },
+    "AccountName:transaction:from": async (ctx) => {
+      // Handle account transactions
+    },
+    "BlockName:block": async (ctx) => {
+      // Handle blocks
+    }
+  },
+  chains: {
+    chainName: {
+      id: 1234,
+      rpc: "https://...",
+    }
+  }
+});
+
+await arkive.run();
+```
+
+## TypeScript Configuration
+
+The project uses modern TypeScript with:
+- ESNext target
+- Bundler module resolution
+- Strict mode enabled
+- JSX support (react-jsx)
+- `.ts` extensions allowed in imports
+
+## Frontend Development
+
+When building frontend applications with Bun:
+
+```ts
 import index from "./index.html"
 
 Bun.serve({
@@ -49,7 +154,6 @@ Bun.serve({
       },
     },
   },
-  // optional websocket support
   websocket: {
     open: (ws) => {
       ws.send("Hello, world!");
@@ -57,9 +161,6 @@ Bun.serve({
     message: (ws, message) => {
       ws.send(message);
     },
-    close: (ws) => {
-      // handle close
-    }
   },
   development: {
     hmr: true,
@@ -68,9 +169,9 @@ Bun.serve({
 })
 ```
 
-HTML files can import .tsx, .jsx or .js files directly and Bun's bundler will transpile & bundle automatically. `<link>` tags can point to stylesheets and Bun's CSS bundler will bundle.
+HTML files can import .tsx, .jsx or .js files directly:
 
-```html#index.html
+```html
 <html>
   <body>
     <h1>Hello, world!</h1>
@@ -79,27 +180,7 @@ HTML files can import .tsx, .jsx or .js files directly and Bun's bundler will tr
 </html>
 ```
 
-With the following `frontend.tsx`:
-
-```tsx#frontend.tsx
-import React from "react";
-
-// import .css files directly and it works
-import './index.css';
-
-import { createRoot } from "react-dom/client";
-
-const root = createRoot(document.body);
-
-export default function Frontend() {
-  return <h1>Hello, world!</h1>;
-}
-
-root.render(<Frontend />);
-```
-
-Then, run index.ts
-
+Run with hot reload:
 ```sh
 bun --hot ./index.ts
 ```
