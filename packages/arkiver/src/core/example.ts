@@ -1,4 +1,4 @@
-// for reference
+// // for reference
 
 // import { defineEntity } from "@mikro-orm/core";
 // import { erc20Abi } from "viem";
@@ -9,7 +9,7 @@
 //   name: "accounts",
 //   properties: (p) => ({
 //     address: p.string().primary(),
-//     balance: p.bigint(),
+//     balance: p.bigint().$type<bigint>(),
 //   }),
 // });
 
@@ -24,20 +24,26 @@
 //     },
 //   },
 //   transformers: {
-//     "Usdc:Transfer": async (ctx, event) => {
-//       const accounts = await ctx.db.findAll(account, {
+//     "Usdc:Transfer": async ({ db, event }) => {
+//       const accounts = await db.findAll(account, {
 //         where: {
 //           address: {
-//             $in: [event.args.from, event.args.to],
+//             $in: [event.args.from!, event.args.to!],
 //           },
 //         },
 //       });
 
-//       const sender = accounts.find(({ address }) => (address = event.args.from))!;
-//       const receiver = accounts.find(({ address }) => (address = event.args.to))!;
+//       const sender = accounts.find(
+//         ({ address }) => address === event.args.from
+//       )!;
+//       const receiver = accounts.find(
+//         ({ address }) => address === event.args.to
+//       )!;
 
-//       sender.balance -= event.args.amount;
-//       receiver.balance += event.args.amount;
+//       sender.balance;
+
+//       sender.balance -= event.args.value!;
+//       receiver.balance += event.args.value!;
 //     },
 //   },
 //   chains: {
